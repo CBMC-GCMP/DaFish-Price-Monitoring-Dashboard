@@ -1,0 +1,169 @@
+---
+title: "CBMC-Fish Price Monitoring"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+
+options(
+  # whenever there is one account token found, use the cached token
+  gargle_oauth_email = TRUE,
+  # specify auth tokens should be stored in a hidden directory ".secrets"
+  gargle_oauth_cache = ".secrets"
+)
+
+library(shiny)
+library(flexdashboard)
+library(googlesheets4)
+library(tidyverse)
+library(patchwork)
+library(plotly)
+library(see)
+
+table_tdr <- read_sheet("https://docs.google.com/spreadsheets/d/1j4vKm0Nv37np8Jucfom68pFP78w10BtuuzKXgslgsY4/edit?usp=sharing")
+
+
+prices <- read_sheet("https://docs.google.com/spreadsheets/d/1hefULquuA_iiB1O5eIDJwCBubGTsPixmNBDJ-VNZNxU/edit?usp=sharing")
+
+fish_shops <- read_sheet("https://docs.google.com/spreadsheets/d/1hefULquuA_iiB1O5eIDJwCBubGTsPixmNBDJ-VNZNxU/edit?usp=sharing", sheet = 2)
+
+
+
+sniim <- table_tdr %>% 
+          pivot_longer(SNIIM_Precio_en_Origen:Walmart) %>% 
+          filter(name == "SNIIM_Precio_en_Origen") %>% 
+          mutate(Price = as.numeric(value), Species_common_name = Productos, Type = "SNIIM") %>%
+          select(Month, Species_common_name, Type, Price) %>% 
+          group_by(Species_common_name, Month) %>% 
+          summarise(Price = mean(Price, na.rm = T))
+  
+
+
+supermarkets <- table_tdr %>% 
+          pivot_longer(SNIIM_Precio_en_Origen:Walmart) %>% 
+          filter(name != "SNIIM_Precio_en_Origen") %>% 
+          mutate(Price = as.numeric(value), Species_common_name = Productos, Type = "Super") %>%
+          select(Month, Species_common_name, Type, Price) %>% 
+          group_by(Species_common_name, Month) %>% 
+          summarise(Price = mean(Price, na.rm = T))
+
+mercados <- prices %>% 
+          select(Month, Species_common_name, Consumer_price, Producer_price) %>% 
+          pivot_longer(Consumer_price:Producer_price, values_to = "Price", names_to = "Type")
+
+
+prices <- prices %>% 
+          mutate(Date = as.Date(paste0(Year, "-", Month, "-", Day), "%Y-%m-%d")) %>% 
+          select(Date, Species_common_name, Consumer_price, Producer_price) %>% 
+          group_by(Date, Species_common_name) %>% 
+          summarise(Consumer_price = mean(Consumer_price, na.rm = T),
+                    Producer_price = mean(Producer_price, na.rm = T)) %>% 
+          mutate(Price_differential = Consumer_price - Producer_price) 
+
+```
+
+City Markets
+=====================================  
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+Fish price monitoring.
+
+```{r}
+
+selectInput("species", label = "Species:",
+            choices = unique(prices$Species_common_name), selected = "Atún")
+
+```
+
+Column
+-----------------------------------------------------------------------
+
+### Fish prices
+
+```{r}
+renderPlot({
+  prices %>% 
+          filter(Species_common_name == as.character(input$species)) %>% 
+          ggplot(aes(x = Date, y = Consumer_price)) +
+          geom_point(aes(x = Date, y = Price_differential), col = "red") +
+          geom_line(aes(x = Date, y = Price_differential), col = "red") +
+          labs(x = "Date", y = "Price differential (MXN)", subtitle = "Price differential is the difference between consumer price and producer price") +
+          facet_wrap(~Species_common_name, scales = "free_y") +
+          theme_lucid() +
+          theme(strip.text = element_text(size = 17))
+})
+```
+
+
+Supermarkets
+=====================================  
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+Fish price monitoring.
+
+```{r}
+
+selectInput("species2", label = "Species:",
+            choices = unique(supermarkets$Species_common_name), selected = "Atún")
+
+```
+
+Column
+-----------------------------------------------------------------------
+
+### Fish prices
+
+```{r}
+renderPlot({
+  supermarkets %>% 
+          filter(Species_common_name == as.character(input$species2)) %>% 
+          ggplot(aes(x = Month, y = Price)) +
+          geom_point(col = "red") +
+          geom_line(col = "red") +
+          facet_wrap(~Species_common_name, scales = "free_y") +
+          labs(x = "Month", y = "Price (MXN)") +
+          theme_lucid() +
+          theme(strip.text = element_text(size = 17))
+})
+```
+
+SNIIM
+=====================================  
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+Fish price monitoring.
+
+```{r}
+
+selectInput("species3", label = "Species:",
+            choices = unique(sniim$Species_common_name), selected = "Atún")
+
+```
+
+Column
+-----------------------------------------------------------------------
+
+### Fish prices
+
+```{r}
+renderPlot({
+  sniim %>% 
+          filter(Species_common_name == as.character(input$species3)) %>% 
+          ggplot(aes(x = Month, y = Price)) +
+          geom_point(col = "red") +
+          geom_line(col = "red") +
+          facet_wrap(~Species_common_name, scales = "free_y") +
+          labs(x = "Month", y = "Price (MXN)") +
+          theme_lucid() +
+          theme(strip.text = element_text(size = 17))
+})
+```
