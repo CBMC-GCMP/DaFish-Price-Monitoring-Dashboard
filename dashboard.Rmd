@@ -1,10 +1,12 @@
 ---
 title: "CBMC-Fish Price Monitoring"
-output: 
+output:
   flexdashboard::flex_dashboard:
     orientation: columns
     vertical_layout: fill
 runtime: shiny
+resource_files:
+- .secrets/bb8565617b5e9996ff93e6d214ba7218_favoretto@uabcs.mx
 ---
 
 ```{r setup, include=FALSE}
@@ -15,6 +17,7 @@ options(
   # specify auth tokens should be stored in a hidden directory ".secrets"
   gargle_oauth_cache = ".secrets"
 )
+
 
 library(shiny)
 library(flexdashboard)
