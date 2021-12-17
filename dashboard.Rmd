@@ -84,18 +84,50 @@ selectInput("species", label = "Species:",
 
 ```
 
-Column
+Column {data-width=600}
 -----------------------------------------------------------------------
 
-### Fish prices
+### Fish Consumer Price
 
 ```{r}
 renderPlot({
   prices %>% 
           filter(Species_common_name == as.character(input$species)) %>% 
           ggplot(aes(x = Date, y = Consumer_price)) +
-          geom_point(aes(x = Date, y = Price_differential), col = "red") +
-          geom_line(aes(x = Date, y = Price_differential), col = "red") +
+          geom_point(aes(x = Date, y = Consumer_price), col = "darkgreen") +
+          geom_line(aes(x = Date, y = Consumer_price), col = "darkgreen") +
+          labs(x = "Date", y = "Consumer price (MXN)", subtitle = "Consumer price is the sale price to the public") +
+          facet_wrap(~Species_common_name, scales = "free_y") +
+          theme_lucid() +
+          theme(strip.text = element_text(size = 17))
+})
+```
+
+### Fish Producer Price
+
+```{r}
+renderPlot({
+  prices %>% 
+          filter(Species_common_name == as.character(input$species)) %>% 
+          ggplot(aes(x = Date, y = Producer_price)) +
+          geom_point(aes(x = Date, y = Producer_price), col = "blue") +
+          geom_line(aes(x = Date, y = Producer_price), col = "blue") +
+          labs(x = "Date", y = "Producer price (MXN)", subtitle = "Producer price is the price fish stores purchase the product to middlemen/fishermen") +
+          facet_wrap(~Species_common_name, scales = "free_y") +
+          theme_lucid() +
+          theme(strip.text = element_text(size = 17))
+})
+```
+
+### Fish Price Differential
+
+```{r}
+renderPlot({
+  prices %>% 
+          filter(Species_common_name == as.character(input$species)) %>% 
+          ggplot(aes(x = Date, y = Consumer_price)) +
+          geom_point(aes(x = Date, y = Price_differential), col = "firebrick") +
+          geom_line(aes(x = Date, y = Price_differential), col = "firebrick") +
           labs(x = "Date", y = "Price differential (MXN)", subtitle = "Price differential is the difference between consumer price and producer price") +
           facet_wrap(~Species_common_name, scales = "free_y") +
           theme_lucid() +
