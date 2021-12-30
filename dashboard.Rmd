@@ -153,7 +153,7 @@ selectInput("species2", label = "Species:",
 Column
 -----------------------------------------------------------------------
 
-### Fish prices
+### Fish supermarkets prices
 
 ```{r}
 renderPlot({
@@ -163,7 +163,7 @@ renderPlot({
           geom_point(col = "red") +
           geom_line(col = "red") +
           facet_wrap(~Species_common_name, scales = "free_y") +
-          labs(x = "Month", y = "Price (MXN)") +
+          labs(x = "Month", y = "Price (MXN)", title = "Prices webscraped from supermarket webpages") +
           theme_lucid() +
           theme(strip.text = element_text(size = 17))
 })
@@ -187,7 +187,7 @@ selectInput("species3", label = "Species:",
 Column
 -----------------------------------------------------------------------
 
-### Fish prices
+### Fish SNIIM
 
 ```{r}
 renderPlot({
@@ -197,7 +197,7 @@ renderPlot({
           geom_point(col = "red") +
           geom_line(col = "red") +
           facet_wrap(~Species_common_name, scales = "free_y") +
-          labs(x = "Month", y = "Price (MXN)") +
+          labs(x = "Month", y = "Price (MXN)", title = "Prices webscraped from SNIIM webpage") +
           theme_lucid() +
           theme(strip.text = element_text(size = 17))
 })
