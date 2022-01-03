@@ -36,15 +36,15 @@ fish_shops <- read_sheet("https://docs.google.com/spreadsheets/d/1hefULquuA_iiB1
 
 
 
-sniim <- table_tdr %>% 
-          pivot_longer(SNIIM_Precio_en_Origen:Walmart) %>% 
-          filter(name == "SNIIM_Precio_en_Origen") %>% 
-          mutate(Price = as.numeric(value), Species_common_name = Productos, Type = "SNIIM") %>%
-          select(Month, Species_common_name, Type, Price) %>% 
-          group_by(Species_common_name, Month) %>% 
-          summarise(Price = mean(Price, na.rm = T))
+# sniim <- table_tdr %>% 
+#           pivot_longer(SNIIM_Precio_en_Origen:Walmart) %>% 
+#           filter(name == "SNIIM_Precio_en_Origen") %>% 
+#           mutate(Price = as.numeric(value), Species_common_name = Productos, Type = "SNIIM") %>%
+#           select(Month, Species_common_name, Type, Price) %>% 
+#           group_by(Species_common_name, Month) %>% 
+#           summarise(Price = mean(Price, na.rm = T))
   
-
+sniim <- read_sheet("https://docs.google.com/spreadsheets/d/1kPJblWSQJ20M-L48sw35hpEuT1G6rjK64K2_ksAiZLg/edit?usp=sharing")
 
 supermarkets <- table_tdr %>% 
           pivot_longer(SNIIM_Precio_en_Origen:Walmart) %>% 
@@ -84,7 +84,7 @@ selectInput("species", label = "Species:",
 
 ```
 
-Column {data-width=600}
+Column {data-width=300}
 -----------------------------------------------------------------------
 
 ### Fish Consumer Price
@@ -135,6 +135,10 @@ renderPlot({
 })
 ```
 
+Column {data-width=100}
+-----------------------------------------------------------------------
+
+### ""
 
 Supermarkets
 =====================================  
@@ -180,8 +184,12 @@ Fish price monitoring.
 ```{r}
 
 selectInput("species3", label = "Species:",
-            choices = unique(sniim$Species_common_name), selected = "Atún")
+            choices = unique(sniim$producto) %>% sort(.), selected = "Atún")
 
+renderUI({
+          selectInput("origin", label = "Origen:",
+            choices = sniim %>% filter(producto == as.character(input$species3)) %>% select(origen) %>% unique() %>% pull() %>% sort(.), selected = "Baja California Sur")
+})
 ```
 
 Column
@@ -192,13 +200,18 @@ Column
 ```{r}
 renderPlot({
   sniim %>% 
-          filter(Species_common_name == as.character(input$species3)) %>% 
-          ggplot(aes(x = Month, y = Price)) +
+          filter(producto == as.character(input$species3)) %>% 
+          filter(origen == as.character(input$origin)) %>% 
+          filter(type == "origin") %>% 
+          mutate(fecha = as.Date(fecha)) %>% 
+          ggplot(aes(x = fecha, y = pfrec)) +
           geom_point(col = "red") +
           geom_line(col = "red") +
-          facet_wrap(~Species_common_name, scales = "free_y") +
-          labs(x = "Month", y = "Price (MXN)", title = "Prices webscraped from SNIIM webpage") +
+          facet_wrap(~producto, scales = "free_y") +
+          labs(x = "Fecha", y = "Price (MXN)", title = "Prices webscraped from SNIIM webpage") +
+          scale_x_date(breaks = "1 day") +
           theme_lucid() +
-          theme(strip.text = element_text(size = 17))
+          theme(strip.text = element_text(size = 17), 
+                axis.text.x = element_text(angle = 90))
 })
 ```
